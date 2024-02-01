@@ -1,0 +1,17 @@
+singleuser:
+  image:
+    name: maatra/notebook
+    tag: latest
+  storage:
+    extraVolumes:
+      - name: jupyterhub-shared
+        persistentVolumeClaim:
+          claimName: efs-output-pvc
+    extraVolumeMounts:
+      - name: jupyterhub-shared
+        mountPath: /home/shared
+  cpu:
+    guarantee: 1
+proxy:
+  service:
+    type: ClusterIP

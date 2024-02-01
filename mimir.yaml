@@ -1,0 +1,49 @@
+store_gateway:
+  zoneAwareReplication:
+    enabled: false
+alertmanager:
+  enabled:
+    false
+ingester:
+  replicas: 1
+  zoneAwareReplication:
+    enabled: false
+querier:
+  replicas: 1
+query_scheduler:
+  replicas: 1
+distributor:
+  replicas: 1
+minio:
+  enabled: false
+mimir:
+  structuredConfig:
+    multitenancy_enabled: false
+    common:
+      storage:
+        backend: s3
+        s3:
+          endpoint: s3.eu-west-2.amazonaws.com
+          region: eu-west-2
+    blocks_storage:
+      s3:
+        bucket_name: mimir-blocks-1323
+
+    alertmanager_storage:
+      s3:
+        bucket_name: mimir-alertmanager-1323
+
+    ruler_storage:
+      s3:
+        bucket_name: mimir-ruler-1323
+    ingester:
+      ring:
+        replication_factor: 1
+metaMonitoring:
+  serviceMonitor:
+    enabled: true
+  dashboards:
+    enabled: true
+
+
+

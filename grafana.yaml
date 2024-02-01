@@ -1,0 +1,37 @@
+---
+#https://artifacthub.io/packages/helm/grafana/grafana
+# image:
+#   repository: grafana/grafana
+#   tag: main
+# env:
+#   GF_FEATURE_TOGGLES_ENABLE: flameGraph
+#   GF_AUTH_ANONYMOUS_ENABLED: "true"
+#   GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+#   GF_DIAGNOSTICS_PROFILING_ENABLED: true
+#   GF_DIAGNOSTICS_PROFILING_ADDR: 0.0.0.0
+#   GF_DIAGNOSTICS_PROFILING_PORT: 6060
+# podAnnotations.pyroscope\.grafana\.com/scrape: "true"
+# podAnnotations.pyroscope\.grafana\.com/port: "6060"
+
+# grafana:
+#   sidecar:
+#     datasources:
+#       defaultDatasourceScrapeInterval: "10s"
+#   additionalDataSources: 
+#   - name: Loki
+#     access: proxy
+#     type: loki
+#     url: http://loki-gateway
+#   - name: Prometheus
+#     access: proxy
+#     type: prometheus
+#     url: http://prometheus-server.monitoring.svc.cluster.local
+adminPassword: "admin2"
+datasources: 
+ datasources.yaml:
+   apiVersion: 1
+   datasources:
+   - name: Prometheus
+     type: prometheus
+     url: http://prometheus-server.monitoring.svc.cluster.local
+     access: proxy

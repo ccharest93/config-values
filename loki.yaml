@@ -1,0 +1,23 @@
+loki:
+  storage:
+    bucketNames:
+      chunks: loki-1323
+      ruler: loki-1323
+      admin: loki-1323
+    type: s3
+    s3:
+      region: eu-west-2
+  auth_enabled: false
+monitoring:
+  selfMonitoring:
+    enabled: false
+  lokiCanary: 
+    enabled: false
+read:
+  replicas: 2
+write:
+  replicas: 2
+backend:
+  replicas: 2
+test:
+  enabled: false

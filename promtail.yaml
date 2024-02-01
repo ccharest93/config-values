@@ -1,0 +1,184 @@
+---
+serviceMonitor:
+  enabled: true
+  intervatl: 10s
+configmap:
+  enabled: true
+# resources:
+#  limits:
+#    cpu: 200m
+#    memory: 128Mi
+#  requests:
+#    cpu: 100m
+#    memory: 128Mi
+config:
+  snippets:
+    pipelineStages: 
+      - cri: {} 
+      - match:
+          selector: '{app="train"}'
+          stages:
+            - regex:
+                expression: '^\[(?P<rank>\d+):'
+                source: content
+            - regex:
+                expression: '{metrics:\s*(?P<ddp_metrics>.*)}'
+                source: content
+            - json:
+                expressions:
+                  lr:
+                  wd:
+                  mom:
+                  last_layer_lr:
+                  current_batch_size:
+                  total_loss:
+                  dino_local_crops_loss:
+                  dino_global_crops_loss:
+                  koleo_loss:
+                  ibot_loss:
+                  time:
+                  data:
+                  max_mem:
+                  iter:
+                  total_iter:
+                  eta:
+                source: ddp_metrics 
+            - labels:
+                rank:
+            - metrics:
+                lr:
+                  type: Gauge
+                  prefix: model_
+                  source: lr
+                  config:
+                    action: set
+                wd:
+                  type: Gauge
+                  prefix: model_
+                  source: wd
+                  config:
+                    action: set
+                mom:
+                  type: Gauge
+                  prefix: model_
+                  source: mom
+                  config:
+                    action: set
+                last_layer_lr:
+                  type: Gauge
+                  prefix: model_
+                  source: last_layer_lr
+                  config:
+                    action: set
+                current_batch_size:
+                  type: Gauge
+                  prefix: model_
+                  source: current_batch_size
+                  config:
+                    action: set
+                total_loss:
+                  type: Gauge
+                  prefix: model_
+                  source: total_loss
+                  config:
+                    action: set
+                dino_local_crops_loss:
+                  type: Gauge
+                  prefix: model_
+                  source: dino_local_crops_loss
+                  config:
+                    action: set
+                dino_global_crops_loss:
+                  type: Gauge
+                  prefix: model_
+                  source: dino_global_crops_loss
+                  config:
+                    action: set
+                koleo_loss:
+                  type: Gauge
+                  prefix: model_
+                  source: koleo_loss
+                  config:
+                    action: set
+                ibot_loss:
+                  type: Gauge
+                  prefix: model_
+                  source: ibot_loss
+                  config:
+                    action: set
+                time:
+                  type: Gauge
+                  prefix: model_
+                  source: time
+                  config:
+                    action: set
+                data:
+                  type: Gauge
+                  prefix: model_
+                  source: data
+                  config:
+                    action: set
+                max_mem:
+                  type: Gauge
+                  prefix: model_
+                  source: max_mem
+                  config:
+                    action: set
+                iter:
+                  type: Gauge
+                  prefix: model_
+                  source: iter
+                  config:
+                    action: set
+                total_iter:
+                  type: Gauge
+                  prefix: model_
+                  source: total_iter
+                  config:
+                    action: set
+                eta:
+                  type: Gauge
+                  prefix: model_
+                  source: eta
+                  config:
+                    action: set
+                
+#           - regex:
+#               expression: '^\[(?P<local>\d+)\]:'
+#               source: content
+#           - labels:
+#               local:
+#           - output:
+#               source: local
+
+          # - json:
+          #     expressions:
+          #       output:    line
+          # - json:
+          #     expressions:
+          #         secs: secs
+          # - metrics:
+          #     log_lines_total:
+          #       type: Counter
+          #       description: "total number of log lines"
+          #       prefix: my_promtail_custom_
+          #       max_idle_duration: 24h
+          #       config:
+          #         match_all: true
+          #         action: inc
+          #     log_bytes_total:
+          #       type: Counter
+          #       description: "total bytes of log lines"
+          #       prefix: my_promtail_custom_
+          #       max_idle_duration: 24h
+          #       config:
+          #         match_all: true
+          #         count_entry_bytes: true
+          #         action: add
+          #     my_cool_metric:
+          #       type: Gauge
+          #       description: "total count of panic"
+          #       prefix: my_promtail_custom_
+          #       source: secs
+          #       config:
+          #         action: set
