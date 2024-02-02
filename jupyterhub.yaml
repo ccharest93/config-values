@@ -13,8 +13,8 @@ singleuser:
   cpu:
     guarantee: 1
   cmd: 
-  -"jupyterhub-singleuser" 
-  -"--notebook-dir=/home"
+    - jupyterhub-singleuser 
+    - "--notebook-dir=/home"
 proxy:
   service:
     type: ClusterIP
