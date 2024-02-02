@@ -12,9 +12,11 @@ singleuser:
         mountPath: /home/shared
   cpu:
     guarantee: 1
-  cmd: jupyterhub-singleuser --notebook-dir=/home
+  cmd: 
+  -"jupyterhub-singleuser" 
+  -"--notebook-dir=/home"
 proxy:
   service:
     type: ClusterIP
 
-  #--notebook-dir=/home
+  #https://github.com/jupyterhub/zero-to-jupyterhub-k8s/blob/main/docs/source/jupyterhub/customizing/user-environment.md
