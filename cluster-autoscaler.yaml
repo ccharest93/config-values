@@ -1,1 +1,4 @@
 ---
+autoDiscovery:
+  clusterName: dev-ekscluster
+awsRegion: eu-west-2
