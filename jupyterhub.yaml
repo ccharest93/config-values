@@ -6,7 +6,7 @@ singleuser:
     extraVolumes:
       - name: jupyterhub-shared
         persistentVolumeClaim:
-          claimName: efs-input-pvc
+          claimName: efs-output-pvc
     extraVolumeMounts:
       - name: jupyterhub-shared
         mountPath: /home/shared
