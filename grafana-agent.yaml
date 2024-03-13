@@ -35,41 +35,24 @@ agent:
         level  = "info"
         format = "logfmt"
       }
-      discovery.kubernetes "pods" {
-        role = "pod"
+      prometheus.exporter.unix "localhost" {
+          // This component exposes a lot of metrics by default, so we will keep all of the default arguments.
       }
-      discovery.kubernetes "nodes" {
-        role = "node"
+
+      prometheus.scrape "default" {
+          // Setting the scrape interval lower to make it faster to be able to see the metrics
+          scrape_interval = "10s"
+
+          targets    = prometheus.exporter.unix.localhost.targets
+          forward_to = [
+              prometheus.remote_write.local_prom.receiver,
+          ]
       }
-      discovery.kubernetes "services" {
-        role = "service"
-      }
-      prometheus.remote_write "primary" {
+
+      prometheus.remote_write "local_prom" {
           endpoint {
               url = "http://prometheus-server:9090"
           }
-      }
-      prometheus.operator.podmonitors "primary" {
-          forward_to = [prometheus.remote_write.primary.receiver]
-      }
-      prometheus.operator.servicemonitors "primary" {
-          forward_to = [prometheus.remote_write.primary.receiver]
-      }
-      discovery.kubernetes "endpoints" {
-        role = "endpoints"
-      }
-      discovery.kubernetes "endpointslices" {
-        role = "endpointslice"
-      }
-      discovery.kubernetes "ingresses" {
-        role = "ingress"
-      }
-      discovery.kubernetes "local_pods" {
-        selectors {
-          field = "spec.nodeName=" + env("HOSTNAME")
-          role = "pod"
-        }
-        role = "pod"
       }
 
     # -- Name of existing ConfigMap to use. Used when create is false.
