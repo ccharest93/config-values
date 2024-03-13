@@ -35,7 +35,7 @@ datasources:
      type: prometheus
      url: http://prometheus-server.monitoring.svc.cluster.local
      access: proxy
-dashboards: {
+dashboards: 
   default:
     DCGM:
       gnetId: 12239
@@ -45,4 +45,4 @@ dashboards: {
       gnetId: 12558
       revision: 2
       datasource: Prometheus
-}
+
