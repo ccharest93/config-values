@@ -51,7 +51,7 @@ agent:
 
       prometheus.remote_write "local_prom" {
           endpoint {
-              url = "http://prometheus-server:80/api/v1/push"
+              url = "http://prometheus-server/api/v1/write"
           }
       }
 
