@@ -30,7 +30,56 @@ agent:
     # -- Create a new ConfigMap for the config file.
     create: true
     # -- Content to assign to the new ConfigMap.  This is passed into `tpl` allowing for templating from values.
-    content: ''
+    content: |
+      logging {
+        level  = "info"
+        format = "logfmt"
+      }
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+      discovery.kubernetes "nodes" {
+        role = "node"
+      }
+      discovery.kubernetes "services" {
+        role = "service"
+      }
+      prometheus.remote_write "primary" {
+          endpoint {
+              url = "http://prometheus-server:9090"
+          }
+      }
+      prometheus.operator.podmonitors "primary" {
+          forward_to = [prometheus.remote_write.primary.receiver]
+      }
+      prometheus.operator.servicemonitors "primary" {
+          forward_to = [prometheus.remote_write.primary.receiver]
+      }
+      discovery.kubernetes "endpoints" {
+        role = "endpoints"
+      }
+      discovery.kubernetes "endpointslices" {
+        role = "endpointslice"
+      }
+      discovery.kubernetes "ingresses" {
+        role = "ingress"
+      }
+      discovery.kubernetes "local_pods" {
+        selectors {
+          field = "spec.nodeName=" + env("HOSTNAME")
+          role = "pod"
+        }
+        role = "pod"
+      }
+      pyroscope.ebpf "instance" {
+        forward_to = [pyroscope.write.endpoint.receiver]
+        targets = discovery.kubernetes.local_pods.targets
+      }
+      pyroscope.write "endpoint" {
+        endpoint {
+          url = "http://pyroscope:4040"
+        }
+      }
 
     # -- Name of existing ConfigMap to use. Used when create is false.
     name: null
