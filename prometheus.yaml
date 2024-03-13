@@ -5,3 +5,7 @@ kube-state-metrics:
   enabled: false
 prometheus-node-exporter:
   enabled: false
+
+server:
+  extraFlags: 
+    - web.enable-remote-write-receiver
