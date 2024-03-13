@@ -42,7 +42,7 @@ dashboards:
       revision: 2
       datasource: Prometheus
     NodeExporter:
-      gnetId: 12558
-      revision: 2
+      gnetId: 1860
+      revision: 36
       datasource: Prometheus
 
