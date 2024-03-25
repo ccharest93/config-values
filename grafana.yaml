@@ -45,4 +45,15 @@ dashboards:
       gnetId: 1860
       revision: 36
       datasource: Prometheus
-
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: default
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        editable: false
+        options:
+          path: /var/lib/grafana/dashboards/default
