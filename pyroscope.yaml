@@ -177,7 +177,7 @@ pyroscope:
 # Configuration for `grafana-agent` child chart
 # -------------------------------------
 agent:
-  enabled: true
+  enabled: false
   controller:
     type: "statefulset"
     replicas: 1
