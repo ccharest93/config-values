@@ -67,7 +67,7 @@ agent:
       }
       pyroscope.write "endpoint" {
         endpoint {
-          url = "http://pyroscope/api/v1/write"
+          url = url = "http://pyroscope.monitoring.svc.cluster.local.:4040"
         }
       }
 
