@@ -66,10 +66,6 @@ dashboardProviders:
 env:
 - name: GF_FEATURE_TOGGLES_ENABLE
   value: flameGraph
-- name: GF_AUTH_ANONYMOUS_ENABLED
-  value: "true"
-- name: GF_AUTH_ANONYMOUS_ORG_ROLE
-  value: Admin
 - name: GF_DIAGNOSTICS_PROFILING_ENABLED
   value: "true"
 - name: GF_DIAGNOSTICS_PROFILING_ADDR
