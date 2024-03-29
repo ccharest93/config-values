@@ -1,504 +1,791 @@
-discovery.kubernetes "kubernetes_apiservers" {
-	role = "endpoints"
+config.river:
+----
+logging {
+  level  = "info"
+  format = "logfmt"
 }
 
-discovery.kubernetes "kubernetes_nodes" {
-	role = "node"
+discovery.kubernetes "pyroscope_kubernetes" {
+  role = "pod"
 }
 
-discovery.kubernetes "kubernetes_nodes_cadvisor" {
-	role = "node"
-}
-
-discovery.kubernetes "kubernetes_service_endpoints" {
-	role = "endpoints"
-}
-
-discovery.kubernetes "kubernetes_service_endpoints_slow" {
-	role = "endpoints"
-}
-
-discovery.kubernetes "prometheus_pushgateway" {
-	role = "service"
-}
-
-discovery.kubernetes "kubernetes_services" {
-	role = "service"
-}
-
-discovery.kubernetes "kubernetes_pods" {
-	role = "pod"
-}
-
-discovery.kubernetes "kubernetes_pods_slow" {
-	role = "pod"
-}
-
-discovery.relabel "kubernetes_apiservers" {
-	targets = discovery.kubernetes.kubernetes_apiservers.targets
-
-	rule {
-		source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_service_name", "__meta_kubernetes_endpoint_port_name"]
-		regex         = "default;kubernetes;https"
-		action        = "keep"
-	}
-}
-
-discovery.relabel "kubernetes_nodes" {
-	targets = discovery.kubernetes.kubernetes_nodes.targets
-
-	rule {
-		regex  = "__meta_kubernetes_node_label_(.+)"
-		action = "labelmap"
-	}
-
-	rule {
-		target_label = "__address__"
-		replacement  = "kubernetes.default.svc:443"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_node_name"]
-		regex         = "(.+)"
-		target_label  = "__metrics_path__"
-		replacement   = "/api/v1/nodes/$1/proxy/metrics"
-	}
-}
-
-discovery.relabel "kubernetes_nodes_cadvisor" {
-	targets = discovery.kubernetes.kubernetes_nodes_cadvisor.targets
-
-	rule {
-		regex  = "__meta_kubernetes_node_label_(.+)"
-		action = "labelmap"
-	}
-
-	rule {
-		target_label = "__address__"
-		replacement  = "kubernetes.default.svc:443"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_node_name"]
-		regex         = "(.+)"
-		target_label  = "__metrics_path__"
-		replacement   = "/api/v1/nodes/$1/proxy/metrics/cadvisor"
-	}
-}
-
-discovery.relabel "kubernetes_service_endpoints" {
-	targets = discovery.kubernetes.kubernetes_service_endpoints.targets
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scrape"]
-		regex         = "true"
-		action        = "keep"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scrape_slow"]
-		regex         = "true"
-		action        = "drop"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scheme"]
-		regex         = "(https?)"
-		target_label  = "__scheme__"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_path"]
-		regex         = "(.+)"
-		target_label  = "__metrics_path__"
-	}
-
-	rule {
-		source_labels = ["__address__", "__meta_kubernetes_service_annotation_prometheus_io_port"]
-		regex         = "(.+?)(?::\\d+)?;(\\d+)"
-		target_label  = "__address__"
-		replacement   = "$1:$2"
-	}
-
-	rule {
-		regex       = "__meta_kubernetes_service_annotation_prometheus_io_param_(.+)"
-		replacement = "__param_$1"
-		action      = "labelmap"
-	}
-
-	rule {
-		regex  = "__meta_kubernetes_service_label_(.+)"
-		action = "labelmap"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_namespace"]
-		target_label  = "namespace"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_name"]
-		target_label  = "service"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_pod_node_name"]
-		target_label  = "node"
-	}
-}
-
-discovery.relabel "kubernetes_service_endpoints_slow" {
-	targets = discovery.kubernetes.kubernetes_service_endpoints_slow.targets
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scrape_slow"]
-		regex         = "true"
-		action        = "keep"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scheme"]
-		regex         = "(https?)"
-		target_label  = "__scheme__"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_path"]
-		regex         = "(.+)"
-		target_label  = "__metrics_path__"
-	}
-
-	rule {
-		source_labels = ["__address__", "__meta_kubernetes_service_annotation_prometheus_io_port"]
-		regex         = "(.+?)(?::\\d+)?;(\\d+)"
-		target_label  = "__address__"
-		replacement   = "$1:$2"
-	}
-
-	rule {
-		regex       = "__meta_kubernetes_service_annotation_prometheus_io_param_(.+)"
-		replacement = "__param_$1"
-		action      = "labelmap"
-	}
-
-	rule {
-		regex  = "__meta_kubernetes_service_label_(.+)"
-		action = "labelmap"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_namespace"]
-		target_label  = "namespace"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_name"]
-		target_label  = "service"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_pod_node_name"]
-		target_label  = "node"
-	}
-}
-
-discovery.relabel "prometheus_pushgateway" {
-	targets = discovery.kubernetes.prometheus_pushgateway.targets
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_probe"]
-		regex         = "pushgateway"
-		action        = "keep"
-	}
-}
-
-discovery.relabel "kubernetes_services" {
-	targets = discovery.kubernetes.kubernetes_services.targets
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_probe"]
-		regex         = "true"
-		action        = "keep"
-	}
-
-	rule {
-		source_labels = ["__address__"]
-		target_label  = "__param_target"
-	}
-
-	rule {
-		target_label = "__address__"
-		replacement  = "blackbox"
-	}
-
-	rule {
-		source_labels = ["__param_target"]
-		target_label  = "instance"
-	}
-
-	rule {
-		regex  = "__meta_kubernetes_service_label_(.+)"
-		action = "labelmap"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_namespace"]
-		target_label  = "namespace"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_service_name"]
-		target_label  = "service"
-	}
-}
-
+// The default scrape config allows to define annotations based scraping.
+//
+// For example the following annotations:
+//
+// ```
+// profiles.grafana.com/memory.scrape: "true"
+// profiles.grafana.com/memory.port: "8080"
+// profiles.grafana.com/cpu.scrape: "true"
+// profiles.grafana.com/cpu.port: "8080"
+// profiles.grafana.com/goroutine.scrape: "true"
+// profiles.grafana.com/goroutine.port: "8080"
+// ```
+//
+// will scrape the `memory`, `cpu` and `goroutine` profiles from the `8080` port of the pod.
+//
+// For more information see https://grafana.com/docs/pyroscope/latest/deploy-kubernetes/helm/#optional-scrape-your-own-workloads-profiles
 discovery.relabel "kubernetes_pods" {
-	targets = discovery.kubernetes.kubernetes_pods.targets
+  targets = concat(discovery.kubernetes.pyroscope_kubernetes.targets)
 
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
-		regex         = "true"
-		action        = "keep"
-	}
+  rule {
+    action        = "drop"
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Pending|Succeeded|Failed|Completed"
+  }
 
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape_slow"]
-		regex         = "true"
-		action        = "drop"
-	}
+  rule {
+    action = "labelmap"
+    regex  = "__meta_kubernetes_pod_label_(.+)"
+  }
 
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scheme"]
-		regex         = "(https?)"
-		target_label  = "__scheme__"
-	}
+  rule {
+    action        = "replace"
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
 
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
-		regex         = "(.+)"
-		target_label  = "__metrics_path__"
-	}
+  rule {
+    action        = "replace"
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
 
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
-		regex         = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
-		target_label  = "__address__"
-		replacement   = "[$2]:$1"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
-		regex         = "(\\d+);((([0-9]+?)(\\.|$)){4})"
-		target_label  = "__address__"
-		replacement   = "$2:$1"
-	}
-
-	rule {
-		regex       = "__meta_kubernetes_pod_annotation_prometheus_io_param_(.+)"
-		replacement = "__param_$1"
-		action      = "labelmap"
-	}
-
-	rule {
-		regex  = "__meta_kubernetes_pod_label_(.+)"
-		action = "labelmap"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_namespace"]
-		target_label  = "namespace"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_pod_name"]
-		target_label  = "pod"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_pod_phase"]
-		regex         = "Pending|Succeeded|Failed|Completed"
-		action        = "drop"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_pod_node_name"]
-		target_label  = "node"
-	}
+  rule {
+    action        = "replace"
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
 }
 
-discovery.relabel "kubernetes_pods_slow" {
-	targets = discovery.kubernetes.kubernetes_pods_slow.targets
+discovery.relabel "kubernetes_pods_memory_default_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
 
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape_slow"]
-		regex         = "true"
-		action        = "keep"
-	}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
 
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scheme"]
-		regex         = "(https?)"
-		target_label  = "__scheme__"
-	}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_port_name"]
+    action        = "keep"
+    regex         = ""
+  }
 
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
-		regex         = "(.+)"
-		target_label  = "__metrics_path__"
-	}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
 
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
-		regex         = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
-		target_label  = "__address__"
-		replacement   = "[$2]:$1"
-	}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
 
-	rule {
-		source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
-		regex         = "(\\d+);((([0-9]+?)(\\.|$)){4})"
-		target_label  = "__address__"
-		replacement   = "$2:$1"
-	}
-
-	rule {
-		regex       = "__meta_kubernetes_pod_annotation_prometheus_io_param_(.+)"
-		replacement = "__param_$1"
-		action      = "labelmap"
-	}
-
-	rule {
-		regex  = "__meta_kubernetes_pod_label_(.+)"
-		action = "labelmap"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_namespace"]
-		target_label  = "namespace"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_pod_name"]
-		target_label  = "pod"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_pod_phase"]
-		regex         = "Pending|Succeeded|Failed|Completed"
-		action        = "drop"
-	}
-
-	rule {
-		source_labels = ["__meta_kubernetes_pod_node_name"]
-		target_label  = "node"
-	}
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
 }
 
-prometheus.scrape "prometheus" {
-	targets = [{
-		__address__ = "localhost:9090",
-	}]
-	forward_to = [prometheus.remote_write.default.receiver]
-	job_name   = "prometheus"
+discovery.relabel "kubernetes_pods_memory_custom_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_port_name"]
+    action        = "drop"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_port_name"
+    action        = "keepequal"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
 }
 
-prometheus.scrape "kubernetes_apiservers" {
-	targets    = discovery.relabel.kubernetes_apiservers.output
-	forward_to = [prometheus.remote_write.default.receiver]
-	job_name   = "kubernetes-apiservers"
-	scheme     = "https"
+pyroscope.scrape "pyroscope_scrape_memory" {
+  clustering {
+    enabled = true
+  }
 
-	authorization {
-		type             = "Bearer"
-		credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-	}
+  targets    = concat(discovery.relabel.kubernetes_pods_memory_default_name.output, discovery.relabel.kubernetes_pods_memory_custom_name.output)
+  forward_to = [pyroscope.write.pyroscope_write.receiver]
 
-	tls_config {
-		ca_file              = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-		insecure_skip_verify = true
-	}
+  profiling_config {
+    profile.memory {
+      enabled = true
+    }
+
+    profile.process_cpu {
+      enabled = false
+    }
+
+    profile.goroutine {
+      enabled = false
+    }
+
+    profile.block {
+      enabled = false
+    }
+
+    profile.mutex {
+      enabled = false
+    }
+
+    profile.fgprof {
+      enabled = false
+    }
+  }
 }
 
-prometheus.scrape "kubernetes_nodes" {
-	targets    = discovery.relabel.kubernetes_nodes.output
-	forward_to = [prometheus.remote_write.default.receiver]
-	job_name   = "kubernetes-nodes"
-	scheme     = "https"
+discovery.relabel "kubernetes_pods_cpu_default_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
 
-	authorization {
-		type             = "Bearer"
-		credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-	}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
 
-	tls_config {
-		ca_file              = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-		insecure_skip_verify = true
-	}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_port_name"]
+    action        = "keep"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
 }
 
-prometheus.scrape "kubernetes_nodes_cadvisor" {
-	targets    = discovery.relabel.kubernetes_nodes_cadvisor.output
-	forward_to = [prometheus.remote_write.default.receiver]
-	job_name   = "kubernetes-nodes-cadvisor"
-	scheme     = "https"
+discovery.relabel "kubernetes_pods_cpu_custom_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
 
-	authorization {
-		type             = "Bearer"
-		credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-	}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
 
-	tls_config {
-		ca_file              = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-		insecure_skip_verify = true
-	}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_port_name"]
+    action        = "drop"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_port_name"
+    action        = "keepequal"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
 }
 
-prometheus.scrape "kubernetes_service_endpoints" {
-	targets      = discovery.relabel.kubernetes_service_endpoints.output
-	forward_to   = [prometheus.remote_write.default.receiver]
-	job_name     = "kubernetes-service-endpoints"
-	honor_labels = true
+pyroscope.scrape "pyroscope_scrape_cpu" {
+  clustering {
+    enabled = true
+  }
+
+  targets    = concat(discovery.relabel.kubernetes_pods_cpu_default_name.output, discovery.relabel.kubernetes_pods_cpu_custom_name.output)
+  forward_to = [pyroscope.write.pyroscope_write.receiver]
+
+  profiling_config {
+    profile.memory {
+      enabled = false
+    }
+
+    profile.process_cpu {
+      enabled = true
+    }
+
+    profile.goroutine {
+      enabled = false
+    }
+
+    profile.block {
+      enabled = false
+    }
+
+    profile.mutex {
+      enabled = false
+    }
+
+    profile.fgprof {
+      enabled = false
+    }
+  }
 }
 
-prometheus.scrape "kubernetes_service_endpoints_slow" {
-	targets         = discovery.relabel.kubernetes_service_endpoints_slow.output
-	forward_to      = [prometheus.remote_write.default.receiver]
-	job_name        = "kubernetes-service-endpoints-slow"
-	honor_labels    = true
-	scrape_interval = "5m0s"
-	scrape_timeout  = "30s"
+discovery.relabel "kubernetes_pods_goroutine_default_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_port_name"]
+    action        = "keep"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
 }
 
-prometheus.scrape "prometheus_pushgateway" {
-	targets      = discovery.relabel.prometheus_pushgateway.output
-	forward_to   = [prometheus.remote_write.default.receiver]
-	job_name     = "prometheus-pushgateway"
-	honor_labels = true
+discovery.relabel "kubernetes_pods_goroutine_custom_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_port_name"]
+    action        = "drop"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_port_name"
+    action        = "keepequal"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
 }
 
-prometheus.scrape "kubernetes_services" {
-	targets      = discovery.relabel.kubernetes_services.output
-	forward_to   = [prometheus.remote_write.default.receiver]
-	job_name     = "kubernetes-services"
-	honor_labels = true
-	params       = {
-		module = ["http_2xx"],
-	}
-	metrics_path = "/probe"
+pyroscope.scrape "pyroscope_scrape_goroutine" {
+  clustering {
+    enabled = true
+  }
+
+  targets    = concat(discovery.relabel.kubernetes_pods_goroutine_default_name.output, discovery.relabel.kubernetes_pods_goroutine_custom_name.output)
+  forward_to = [pyroscope.write.pyroscope_write.receiver]
+
+  profiling_config {
+    profile.memory {
+      enabled = false
+    }
+
+    profile.process_cpu {
+      enabled = false
+    }
+
+    profile.goroutine {
+      enabled = true
+    }
+
+    profile.block {
+      enabled = false
+    }
+
+    profile.mutex {
+      enabled = false
+    }
+
+    profile.fgprof {
+      enabled = false
+    }
+  }
 }
 
-prometheus.scrape "kubernetes_pods" {
-	targets      = discovery.relabel.kubernetes_pods.output
-	forward_to   = [prometheus.remote_write.default.receiver]
-	job_name     = "kubernetes-pods"
-	honor_labels = true
+discovery.relabel "kubernetes_pods_block_default_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_port_name"]
+    action        = "keep"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_block_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
 }
 
-prometheus.scrape "kubernetes_pods_slow" {
-	targets         = discovery.relabel.kubernetes_pods_slow.output
-	forward_to      = [prometheus.remote_write.default.receiver]
-	job_name        = "kubernetes-pods-slow"
-	honor_labels    = true
-	scrape_interval = "5m0s"
-	scrape_timeout  = "30s"
+discovery.relabel "kubernetes_pods_block_custom_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_port_name"]
+    action        = "drop"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_block_port_name"
+    action        = "keepequal"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_block_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
+}
+
+pyroscope.scrape "pyroscope_scrape_block" {
+  clustering {
+    enabled = true
+  }
+
+  targets    = concat(discovery.relabel.kubernetes_pods_block_default_name.output, discovery.relabel.kubernetes_pods_block_custom_name.output)
+  forward_to = [pyroscope.write.pyroscope_write.receiver]
+
+  profiling_config {
+    profile.memory {
+      enabled = false
+    }
+
+    profile.process_cpu {
+      enabled = false
+    }
+
+    profile.goroutine {
+      enabled = false
+    }
+
+    profile.block {
+      enabled = true
+    }
+
+    profile.mutex {
+      enabled = false
+    }
+
+    profile.fgprof {
+      enabled = false
+    }
+  }
+}
+
+discovery.relabel "kubernetes_pods_mutex_default_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_port_name"]
+    action        = "keep"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
+}
+
+discovery.relabel "kubernetes_pods_mutex_custom_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_port_name"]
+    action        = "drop"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_port_name"
+    action        = "keepequal"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
+}
+
+pyroscope.scrape "pyroscope_scrape_mutex" {
+  clustering {
+    enabled = true
+  }
+
+  targets    = concat(discovery.relabel.kubernetes_pods_mutex_default_name.output, discovery.relabel.kubernetes_pods_mutex_custom_name.output)
+  forward_to = [pyroscope.write.pyroscope_write.receiver]
+
+  profiling_config {
+    profile.memory {
+      enabled = false
+    }
+
+    profile.process_cpu {
+      enabled = false
+    }
+
+    profile.goroutine {
+      enabled = false
+    }
+
+    profile.block {
+      enabled = false
+    }
+
+    profile.mutex {
+      enabled = true
+    }
+
+    profile.fgprof {
+      enabled = false
+    }
+  }
+}
+
+discovery.relabel "kubernetes_pods_fgprof_default_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_port_name"]
+    action        = "keep"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
+}
+
+discovery.relabel "kubernetes_pods_fgprof_custom_name" {
+  targets = concat(discovery.relabel.kubernetes_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_port_name"]
+    action        = "drop"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_port_name"
+    action        = "keepequal"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
+}
+
+pyroscope.scrape "pyroscope_scrape_fgprof" {
+  clustering {
+    enabled = true
+  }
+
+  targets    = concat(discovery.relabel.kubernetes_pods_fgprof_default_name.output, discovery.relabel.kubernetes_pods_fgprof_custom_name.output)
+  forward_to = [pyroscope.write.pyroscope_write.receiver]
+
+  profiling_config {
+    profile.memory {
+      enabled = false
+    }
+
+    profile.process_cpu {
+      enabled = false
+    }
+
+    profile.goroutine {
+      enabled = false
+    }
+
+    profile.block {
+      enabled = false
+    }
+
+    profile.mutex {
+      enabled = false
+    }
+
+    profile.fgprof {
+      enabled = true
+    }
+  }
+}
+
+pyroscope.write "pyroscope_write" {
+  endpoint {
+    url = "http://pyroscope.monitoring.svc.cluster.local.:4040"
+  }
 }
