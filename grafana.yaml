@@ -58,9 +58,9 @@ dashboardProviders:
         options:
           path: /var/lib/grafana/dashboards/default
 
-# env:
-# - name: GF_FEATURE_TOGGLES_ENABLE
-#   value: flameGraph
+env:
+- name: GF_FEATURE_TOGGLES_ENABLE
+  value: flameGraph
 # - name: GF_DIAGNOSTICS_PROFILING_ENABLED
 #   value: "true"
 # - name: GF_DIAGNOSTICS_PROFILING_ADDR
