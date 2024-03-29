@@ -57,3 +57,22 @@ dashboardProviders:
         editable: false
         options:
           path: /var/lib/grafana/dashboards/default
+  #--set env.GF_FEATURE_TOGGLES_ENABLE=flameGraph \
+  # --set env.GF_AUTH_ANONYMOUS_ENABLED=true \
+  # --set env.GF_AUTH_ANONYMOUS_ORG_ROLE=Admin \
+  # --set env.GF_DIAGNOSTICS_PROFILING_ENABLED=true \
+  # --set env.GF_DIAGNOSTICS_PROFILING_ADDR=0.0.0.0 \
+  # --set env.GF_DIAGNOSTICS_PROFILING_PORT=6060 \
+env:
+- name: GF_FEATURE_TOGGLES_ENABLE
+  value: flameGraph
+- name: GF_AUTH_ANONYMOUS_ENABLED
+  value: "true"
+- name: GF_AUTH_ANONYMOUS_ORG_ROLE
+  value: Admin
+- name: GF_DIAGNOSTICS_PROFILING_ENABLED
+  value: "true"
+- name: GF_DIAGNOSTICS_PROFILING_ADDR
+  value: "0.0.0.0"
+- name: GF_DIAGNOSTICS_PROFILING_PORT
+  value: "6060"
