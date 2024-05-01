@@ -1,4 +1,4 @@
 ---
 autoDiscovery:
-  clusterName: dev-ekscluster
+  clusterName: prod-ekscluster
 awsRegion: eu-west-2
