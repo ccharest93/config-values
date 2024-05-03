@@ -115,7 +115,7 @@ additionalLabels: {}
 enableCertManager: false
 
 # The name of the Kubernetes cluster. A non-empty value is required
-clusterName: dev-ekscluster
+clusterName: prod-ekscluster
 
 # cluster contains configurations specific to the kubernetes cluster
 cluster:
@@ -124,7 +124,7 @@ cluster:
 
 # The ingress class this controller will satisfy. If not specified, controller will match all
 # ingresses without ingress class annotation and ingresses of type alb
-ingressClass: alb
+ingressClass: 
 
 # ingressClassParams specify the IngressCLassParams that enforce settings for a set of Ingresses when using with ingress Controller.
 ingressClassParams:
